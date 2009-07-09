@@ -1,70 +1,97 @@
-(function(){
-  var global = this;
-  global.Machine = global.Machine || {};
-  var includer = global.Machine.Includer = {};
+(function() {
+   var global = this;
+   global.Machine = global.Machine || {};
+   var includer = global.Machine.Includer = {};
 
-  includer.load = loadIncludes;
+   includer.load = loadIncludes;
 
-  includer.configure = function(options){
-    options = options || {};
-    var includeFunctionName = options.includeFunction || "include";
-    global[includeFunctionName] = include;
-  }
- 
-  var includeQueue = []; 
-  var includeContextStack = [];
-  var includedScripts = {};
+   includer.configure = function(optionsToSet) {
+      copyAttributes(options, optionsToSet || {});
+      global[includeFunctionName] = options.include;
+   }
 
-  var include = function(script){
-    if(typeof script == "string"){
-      if(includedScripts[script]){
-        return;
+   var options = {
+      scriptLocations: { "/": /.*/ },
+      includeFunctionName: "include"
+   }
+
+   var includeQueue = [];
+   var bundled = [];
+   var includeContextStack = [];
+   var includedScripts = {};
+
+   var include = function(script) {
+      if (typeof script == "string") {
+         if (includedScripts[script]) {
+            return;
+         }
+         includeQueue.push(function() { dynamicLoad(script); });
       }
-    }
-    includeQueue.push(script);
-  };
-
-  include.load = function(){ loadIncludes();};
-
-  var loadIncludes = function(){
-    if(includeQueue.length == 0){
-      if(includeContextStack == 0){
-        return;
+      else {
+         includeQueue.push(function() { runScript(script); });
       }
-      includeQueue = includeContextStack.pop();
-      loadIncludes();
-    }
-    var script = includeQueue.shift();
-    if(typeof script == "function"){
+   };
+
+   include.load = function() { loadIncludes(); };
+
+   var loadIncludes = function() {
+      if (includeQueue.length == 0) {
+         if (includeContextStack.length == 0) {
+            return;
+         }
+         includeQueue = includeContextStack.pop();
+         loadIncludes();
+      }
+      var nextAction = includeQueue.shift();
+      nextAction();
+   }
+
+   var runScript = function(script) {
       script.apply(global);
       loadIncludes();
-    }
-    else{
-      loadScript(script);
-    }
+   }
 
-  }
-
-  var loadScript = function(script){
-    includeContextStack.push(includeQueue);
-    includeQueue = [];
-
-    var head = document.getElementsByTagName("head")[0];
-    var scriptTag = document.createElement("script");
-    scriptTag.type = 'text/javascript';
-    scriptTag.src = script;
-
-    scriptTag.onload = loadIncludes;
-    scriptTag.onreadystatechange = function(){
-      if(this.readyState == 'complete' || this.readyState == 'loaded'){
-        scriptTag.onreadystatechange = null;
-        loadIncludes();
+   var dynamicLoad = function(script) {
+      var fullScriptPath = getFullScriptPath(script);
+      includeContextStack.push(includeQueue);
+      includeQueue = [];
+      if (path.match(/\.css$/)) {
+         appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
       }
-    }
-    head.appendChild(scriptTag);
-  }
-})();
+      else {
+         appendTagToHead("script", { type: "text/javascript", src: fullScriptPath});
+      }
+   }
 
+   var appendTagToHead = function(tagName, attributes) {
+      var tag = document.createElement(tagName);
+      copyAttributes(tag, attributes);
+      tag.onload = loadIncludes;
+      tag.onreadystatechange = function() {
+         if (this.readyState == 'complete' || this.readyState == 'loaded') {
+            tag.onreadystatechange = null;
+            loadIncludes();
+         }
+      }
+      head.appendChild(tag);
+   }
+
+   var copyAttributes = function(destination, source) {
+      for (var attribute in source) {
+         destination[attribute] = source[attribute];
+      }
+   }
+
+   var getFullScriptPath = function(script) {
+      for (var path in options.scriptLocations) {
+         if (script.matches(options.scriptLocations[path])) {
+            return path.concat(script);
+         }
+      }
+      return script;
+   }
+
+})();
 
 
 
