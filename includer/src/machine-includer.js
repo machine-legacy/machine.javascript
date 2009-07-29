@@ -42,6 +42,7 @@
          }
          includeQueue = includeContextStack.pop();
          loadIncludes();
+         return;
       }
       var nextAction = includeQueue.shift();
       nextAction();
