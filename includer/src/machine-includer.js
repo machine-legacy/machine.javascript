@@ -86,8 +86,8 @@
 
    var getFullScriptPath = function(script) {
       for (var path in options.scriptLocations) {
-         if (script.matches(options.scriptLocations[path])) {
-            return path.concat(script);
+         if (script.match(options.scriptLocations[path])) {
+            return path.concat(script).concat(options.suffix);
          }
       }
       return script;
