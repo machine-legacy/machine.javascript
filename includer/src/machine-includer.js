@@ -56,11 +56,11 @@
       var fullScriptPath = getFullScriptPath(script);
       includeContextStack.push(includeQueue);
       includeQueue = [];
-      if (path.match(/\.css$/)) {
+      if (script.match(/\.css$/)) {
          appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
       }
       else {
-         appendTagToHead("script", { type: "text/javascript", src: fullScriptPath});
+         appendTagToHead("script", { type: "text/javascript", src: fullScriptPath });
       }
    }
 
