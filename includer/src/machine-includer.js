@@ -14,6 +14,7 @@
       scriptLocations: { ".*": "/" },
       suffix: "",
       includeFunctionName: "include",
+      loaders: {}
    }
 
    var includeQueue = [];
@@ -57,7 +58,11 @@
       var fullScriptPath = getFullScriptPath(script);
       includeContextStack.push(includeQueue);
       includeQueue = [];
-      if (script.match(/\.css$/)) {
+      var loader = getSpecialLoader(script);
+      if (loader != null) {
+         loader(fullScriptPath,loadIncludes);
+      }
+      else if (script.match(/\.css$/)) {
          appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
       }
       else {
@@ -92,6 +97,15 @@
          }
       }
       return script;
+   }
+
+   var getSpecialLoader = function(script) {
+      for (var pattern in options.loaders) {
+         if (script.match(new RegExp(pattern))) {
+            return options.loaders[pattern];
+         }
+      }
+      return null;
    }
 
 })();
