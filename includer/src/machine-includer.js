@@ -1,17 +1,18 @@
 (function() {
    var global = this;
    global.Machine = global.Machine || {};
-   var includer = global.Machine.Includer = {};
+   var Includer = global.Machine.Includer = {};
 
-   includer.load = loadIncludes;
 
-   includer.configure = function(optionsToSet) {
+   Includer.configure = function(optionsToSet) {
       copyAttributes(options, optionsToSet || {});
-      global[includeFunctionName] = options.include;
+      global[options.includeFunctionName] = include;
+      this.load = loadIncludes;
    }
 
    var options = {
       scriptLocations: { "/": /.*/ },
+      suffix: "",
       includeFunctionName: "include"
    }
 
