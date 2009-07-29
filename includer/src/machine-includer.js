@@ -7,7 +7,6 @@
    Includer.configure = function(optionsToSet) {
       copyAttributes(options, optionsToSet || {});
       global[options.includeFunctionName] = include;
-      this.load = loadIncludes;
    }
 
    var options = {
@@ -35,11 +34,20 @@
       }
    };
 
-   include.load = function() { loadIncludes(); };
+   var loading = false;
+
+   include.load = function() {
+      if (loading == false) {
+         loading = true;
+         loadIncludes()
+      }
+   };
 
    var loadIncludes = function() {
       if (includeQueue.length == 0) {
          if (includeContextStack.length == 0) {
+            loading = false;
+            console.log("Done with includes");
             return;
          }
          includeQueue = includeContextStack.pop();
