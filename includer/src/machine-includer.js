@@ -11,9 +11,9 @@
    }
 
    var options = {
-      scriptLocations: { "/": /.*/ },
+      scriptLocations: { ".*": "/" },
       suffix: "",
-      includeFunctionName: "include"
+      includeFunctionName: "include",
    }
 
    var includeQueue = [];
@@ -86,9 +86,9 @@
    }
 
    var getFullScriptPath = function(script) {
-      for (var path in options.scriptLocations) {
-         if (script.match(options.scriptLocations[path])) {
-            return path.concat(script).concat(options.suffix);
+      for (var pattern in options.scriptLocations) {
+         if (script.match(new RegExp(pattern))) {
+            return options.scriptLocations[pattern].concat(script).concat(options.suffix);
          }
       }
       return script;
