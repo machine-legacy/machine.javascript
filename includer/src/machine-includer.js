@@ -28,6 +28,7 @@
             return;
          }
          includeQueue.push(function() { dynamicLoad(script); });
+         includedScripts[script] = true;
       }
       else {
          includeQueue.push(function() { runScript(script); });
