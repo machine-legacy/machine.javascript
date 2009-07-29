@@ -61,7 +61,7 @@
       includeQueue = [];
       var loader = getSpecialLoader(script);
       if (loader != null) {
-         loader(fullScriptPath,loadIncludes);
+         loader(script, fullScriptPath, loadIncludes);
       }
       else if (script.match(/\.css$/)) {
          appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
