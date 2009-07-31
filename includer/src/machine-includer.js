@@ -34,7 +34,12 @@
    include.cache = function(key, action) {
       cachedScripts[key] = function() {
          includedScripts[key] = true;
-         insertCachedScript(key, action);
+         if (isCss(key)) {
+            insertCachedStyle(key, action);
+         }
+         else {
+            insertCachedScript(key, action);
+         }
       };
    };
 
@@ -50,7 +55,10 @@
       loadIncludes();
    };
 
-
+   var insertCachedStyle = function(name, styleText) {
+      appendTagToHead("style", { type: "text/css" }, styleText);
+      loadIncludes();
+   };
 
    include.load = function() {
       if (loading == false) {
@@ -63,7 +71,7 @@
       if (includeQueue.length == 0) {
          if (includeContextStack.length == 0) {
             loading = false;
-            console.log("Done with includes");
+            //console.log("Done with includes");
             return;
          }
          includeQueue = includeContextStack.pop();
@@ -81,11 +89,11 @@
       }
       includedScripts[script] = true;
       if (cachedScripts[script]) {
-         console.log("Loading " + script + " from cache");
+         //console.log("Loading " + script + " from cache");
          cachedScripts[script]();
       }
       else {
-         console.log("Dynamic load " + script);
+         //console.log("Dynamic load " + script);
          dynamicLoad(script);
       }
    };
