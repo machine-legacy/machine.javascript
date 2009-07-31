@@ -7,34 +7,50 @@
    Includer.configure = function(optionsToSet) {
       copyAttributes(options, optionsToSet || {});
       global[options.includeFunctionName] = include;
-   }
+   };
 
    var options = {
       scriptLocations: { ".*": "/" },
       suffix: "",
       includeFunctionName: "include",
       loaders: {}
-   }
+   };
 
    var includeQueue = [];
-   var bundled = [];
    var includeContextStack = [];
    var includedScripts = {};
+   var cachedScripts = {};
+   var loading = false;
 
    var include = function(script) {
       if (typeof script == "string") {
-         if (includedScripts[script]) {
-            return;
-         }
-         includeQueue.push(function() { dynamicLoad(script); });
-         includedScripts[script] = true;
+         includeQueue.push(function() { includeScript(script); });
       }
       else {
          includeQueue.push(function() { runScript(script); });
       }
    };
 
-   var loading = false;
+   include.cache = function(key, action) {
+      cachedScripts[key] = function() {
+         includedScripts[key] = true;
+         insertCachedScript(key, action);
+      };
+   };
+
+   var getFunctionInnerSource = function(fn) {
+      var src = fn.toString();
+      var openBraceIdx = src.indexOf("{");
+      return src.substr(openBraceIdx + 1, src.length - (openBraceIdx + 2));
+   };
+
+   var insertCachedScript = function(name, scriptWrappedInFunction) {
+      newIncludeContext();
+      appendTagToHead("script", { type: "text/javascript", name: name }, getFunctionInnerSource(scriptWrappedInFunction));
+      loadIncludes();
+   };
+
+
 
    include.load = function() {
       if (loading == false) {
@@ -56,17 +72,37 @@
       }
       var nextAction = includeQueue.shift();
       nextAction();
-   }
+   };
+
+   var includeScript = function(script) {
+      if (includedScripts[script]) {
+         loadIncludes();
+         return;
+      }
+      includedScripts[script] = true;
+      if (cachedScripts[script]) {
+         console.log("Loading " + script + " from cache");
+         cachedScripts[script]();
+      }
+      else {
+         console.log("Dynamic load " + script);
+         dynamicLoad(script);
+      }
+   };
 
    var runScript = function(script) {
       script.apply(global);
       loadIncludes();
-   }
+   };
 
-   var dynamicLoad = function(script) {
-      var fullScriptPath = getFullScriptPath(script);
+   var newIncludeContext = function() {
       includeContextStack.push(includeQueue);
       includeQueue = [];
+   };
+
+   var dynamicLoad = function(script) {
+      newIncludeContext();
+      var fullScriptPath = getFullScriptPath(script);
       var loader = getSpecialLoader(script);
       if (loader != null) {
          loader(script, fullScriptPath, loadIncludes);
@@ -77,11 +113,14 @@
       else {
          appendTagToHead("script", { type: "text/javascript", src: fullScriptPath });
       }
-   }
+   };
 
-   var appendTagToHead = function(tagName, attributes) {
+   var appendTagToHead = function(tagName, attributes, body) {
       var tag = document.createElement(tagName);
       copyAttributes(tag, attributes);
+      if (body) {
+         tag.text = body;
+      }
       tag.onload = loadIncludes;
       tag.onreadystatechange = function() {
          if (this.readyState == 'complete' || this.readyState == 'loaded') {
@@ -91,13 +130,13 @@
       }
       var head = document.getElementsByTagName("head")[0];
       head.appendChild(tag);
-   }
+   };
 
    var copyAttributes = function(destination, source) {
       for (var attribute in source) {
          destination[attribute] = source[attribute];
       }
-   }
+   };
 
    var getFullScriptPath = function(script) {
       for (var pattern in options.scriptLocations) {
@@ -106,7 +145,7 @@
          }
       }
       return script;
-   }
+   };
 
    var getSpecialLoader = function(script) {
       for (var pattern in options.loaders) {
@@ -115,7 +154,7 @@
          }
       }
       return null;
-   }
+   };
 
 })();
 
