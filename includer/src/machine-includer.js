@@ -100,6 +100,10 @@
       includeQueue = [];
    };
 
+   var isCss = function(path) {
+      return path.match(/\.css$/)
+   };
+
    var dynamicLoad = function(script) {
       newIncludeContext();
       var fullScriptPath = getFullScriptPath(script);
@@ -107,8 +111,9 @@
       if (loader != null) {
          loader(script, fullScriptPath, loadIncludes);
       }
-      else if (script.match(/\.css$/)) {
+      else if (isCss(script)) {
          appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
+         loadIncludes();
       }
       else {
          appendTagToHead("script", { type: "text/javascript", src: fullScriptPath });
@@ -119,13 +124,15 @@
       var tag = document.createElement(tagName);
       copyAttributes(tag, attributes);
       if (body) {
-         tag.text = body;
+         tag.appendChild(document.createTextNode(body));
       }
-      tag.onload = loadIncludes;
-      tag.onreadystatechange = function() {
-         if (this.readyState == 'complete' || this.readyState == 'loaded') {
-            tag.onreadystatechange = null;
-            loadIncludes();
+      if (tagName == "script") {
+         tag.onload = loadIncludes;
+         tag.onreadystatechange = function() {
+            if (this.readyState == 'complete' || this.readyState == 'loaded') {
+               tag.onreadystatechange = null;
+               loadIncludes();
+            }
          }
       }
       var head = document.getElementsByTagName("head")[0];
