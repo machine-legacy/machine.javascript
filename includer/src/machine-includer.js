@@ -56,6 +56,7 @@
    };
 
    var insertCachedStyle = function(name, styleText) {
+      styleText = styleText.replace(/url\s*\(\s*'\s*(?!http)/g, "url('" + getPrefixForPath(name));
       appendTagToHead("style", { type: "text/css" }, styleText);
       loadIncludes();
    };
@@ -154,13 +155,17 @@
    };
 
    var getFullScriptPath = function(script) {
+      return getPrefixForPath(script) + script+"?"+options.suffix;
+   };
+
+   var getPrefixForPath = function(path) {
       for (var pattern in options.scriptLocations) {
-         if (script.match(new RegExp(pattern))) {
-            return options.scriptLocations[pattern].concat(script).concat(options.suffix);
+         if (path.match(new RegExp(pattern))) {
+            return options.scriptLocations[pattern];
          }
       }
-      return script;
-   };
+      return "";
+   }
 
    var getSpecialLoader = function(script) {
       for (var pattern in options.loaders) {
