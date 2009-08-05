@@ -155,7 +155,7 @@
    };
 
    var getFullScriptPath = function(script) {
-      return getPrefixForPath(script) + script+"?"+options.suffix;
+      return getPrefixForPath(script) + script+options.suffix;
    };
 
    var getPrefixForPath = function(path) {
