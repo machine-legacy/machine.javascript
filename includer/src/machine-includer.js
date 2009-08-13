@@ -133,7 +133,17 @@
       var tag = document.createElement(tagName);
       copyAttributes(tag, attributes);
       if (body) {
-         tag.appendChild(document.createTextNode(body));
+         if (null == tag.canHaveChildren || tag.canHaveChildren) {
+            tag.appendChild(document.createTextNode(body));
+         }
+         else {
+            if (tagName == "style") {
+               tag.styleSheet.cssText = body;
+            }
+            else {
+               tag.text = body;
+            }
+         }
       }
       if (tagName == "script") {
          tag.onload = loadIncludes;
@@ -155,7 +165,7 @@
    };
 
    var getFullScriptPath = function(script) {
-      return getPrefixForPath(script) + script+options.suffix;
+      return getPrefixForPath(script) + script + options.suffix;
    };
 
    var getPrefixForPath = function(path) {
