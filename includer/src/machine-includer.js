@@ -8,11 +8,11 @@
        cachedScripts = {},
        loading = false,
        options = {
-         scriptLocations: { ".*": "/" },
-         suffix: "",
-         includeFunctionName: "include",
-         loaders: {}
-       }
+          scriptLocations: { ".*": "/" },
+          suffix: "",
+          includeFunctionName: "include",
+          loaders: {}
+       };
 
 
    function copyAttributes(destination, source) {
