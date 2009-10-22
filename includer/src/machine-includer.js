@@ -73,7 +73,7 @@
       var tag = document.createElement(tagName);
       copyAttributes(tag, attributes);
       if (body) {
-         if (null === tag.canHaveChildren || tag.canHaveChildren) {
+         if (undefined === tag.canHaveChildren || tag.canHaveChildren) {
             tag.appendChild(document.createTextNode(body));
          }
          else {
