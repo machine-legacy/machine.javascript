@@ -1,76 +1,31 @@
 (function() {
-   var global = this;
-   global.Machine = global.Machine || {};
-   var Includer = global.Machine.Includer = {};
+   this.Machine = this.Machine || {};
+   var global = this,
+       Includer = global.Machine.Includer = {},
+       includeQueue = [],
+       includeContextStack = [],
+       includedScripts = {},
+       cachedScripts = {},
+       loading = false,
+       options = {
+         scriptLocations: { ".*": "/" },
+         suffix: "",
+         includeFunctionName: "include",
+         loaders: {}
+       }
 
 
-   Includer.configure = function(optionsToSet) {
-      copyAttributes(options, optionsToSet || {});
-      global[options.includeFunctionName] = include;
-   };
-
-   var options = {
-      scriptLocations: { ".*": "/" },
-      suffix: "",
-      includeFunctionName: "include",
-      loaders: {}
-   };
-
-   var includeQueue = [];
-   var includeContextStack = [];
-   var includedScripts = {};
-   var cachedScripts = {};
-   var loading = false;
-
-   var include = function(script) {
-      if (typeof script == "string") {
-         includeQueue.push(function() { includeScript(script); });
-      }
-      else {
-         includeQueue.push(function() { runScript(script); });
-      }
-   };
-
-   include.cache = function(key, action) {
-      cachedScripts[key] = function() {
-         includedScripts[key] = true;
-         if (isCss(key)) {
-            insertCachedStyle(key, action);
+   function copyAttributes(destination, source) {
+      for (var attribute in source) {
+         if (source.hasOwnProperty(attribute)) {
+            destination[attribute] = source[attribute];
          }
-         else {
-            insertCachedScript(key, action);
-         }
-      };
-   };
-
-   var getFunctionInnerSource = function(fn) {
-      var src = fn.toString();
-      var openBraceIdx = src.indexOf("{");
-      return src.substr(openBraceIdx + 1, src.length - (openBraceIdx + 2));
-   };
-
-   var insertCachedScript = function(name, scriptWrappedInFunction) {
-      newIncludeContext();
-      appendTagToHead("script", { type: "text/javascript", name: name }, getFunctionInnerSource(scriptWrappedInFunction));
-      loadIncludes();
-   };
-
-   var insertCachedStyle = function(name, styleText) {
-      styleText = styleText.replace(/url\s*\(\s*'\s*(?!http)/g, "url('" + getPrefixForPath(name));
-      appendTagToHead("style", { type: "text/css" }, styleText);
-      loadIncludes();
-   };
-
-   include.load = function() {
-      if (loading == false) {
-         loading = true;
-         loadIncludes()
       }
-   };
+   }
 
-   var loadIncludes = function() {
-      if (includeQueue.length == 0) {
-         if (includeContextStack.length == 0) {
+   function loadIncludes() {
+      if (includeQueue.length === 0) {
+         if (includeContextStack.length === 0) {
             loading = false;
             //console.log("Done with includes");
             return;
@@ -81,9 +36,85 @@
       }
       var nextAction = includeQueue.shift();
       nextAction();
-   };
+   }
 
-   var includeScript = function(script) {
+   function newIncludeContext() {
+      includeContextStack.push(includeQueue);
+      includeQueue = [];
+   }
+
+   function getPrefixForPath(path) {
+      for (var pattern in options.scriptLocations) {
+         if (path.match(new RegExp(pattern))) {
+            return options.scriptLocations[pattern];
+         }
+      }
+      return "";
+   }
+
+   function getFullScriptPath(script) {
+      return getPrefixForPath(script) + script + options.suffix;
+   }
+
+   function getSpecialLoader(script) {
+      for (var pattern in options.loaders) {
+         if (script.match(new RegExp(pattern))) {
+            return options.loaders[pattern];
+         }
+      }
+      return null;
+   }
+
+   function isCss(path) {
+      return path.match(/\.css$/);
+   }
+
+   function appendTagToHead(tagName, attributes, body) {
+      var tag = document.createElement(tagName);
+      copyAttributes(tag, attributes);
+      if (body) {
+         if (null === tag.canHaveChildren || tag.canHaveChildren) {
+            tag.appendChild(document.createTextNode(body));
+         }
+         else {
+            if (tagName === "style") {
+               tag.styleSheet.cssText = body;
+            }
+            else {
+               tag.text = body;
+            }
+         }
+      }
+      if (tagName === "script" && !body) {
+         tag.onload = loadIncludes;
+         tag.onreadystatechange = function() {
+            if (this.readyState === 'complete' || this.readyState === 'loaded') {
+               tag.onreadystatechange = null;
+               loadIncludes();
+            }
+         };
+      }
+      var head = document.getElementsByTagName("head")[0];
+      head.appendChild(tag);
+   }
+
+   function dynamicLoad(script) {
+      newIncludeContext();
+      var fullScriptPath = getFullScriptPath(script);
+      var loader = getSpecialLoader(script);
+      if (loader !== null) {
+         loader(script, fullScriptPath, loadIncludes);
+      }
+      else if (isCss(script)) {
+         appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
+         loadIncludes();
+      }
+      else {
+         appendTagToHead("script", { type: "text/javascript", src: fullScriptPath });
+      }
+   }
+
+   function includeScript(script) {
       if (includedScripts[script]) {
          loadIncludes();
          return;
@@ -97,95 +128,69 @@
          //console.log("Dynamic load " + script);
          dynamicLoad(script);
       }
-   };
-
-   var runScript = function(script) {
-      script.apply(global);
-      loadIncludes();
-   };
-
-   var newIncludeContext = function() {
-      includeContextStack.push(includeQueue);
-      includeQueue = [];
-   };
-
-   var isCss = function(path) {
-      return path.match(/\.css$/)
-   };
-
-   var dynamicLoad = function(script) {
-      newIncludeContext();
-      var fullScriptPath = getFullScriptPath(script);
-      var loader = getSpecialLoader(script);
-      if (loader != null) {
-         loader(script, fullScriptPath, loadIncludes);
-      }
-      else if (isCss(script)) {
-         appendTagToHead("link", { type: "text/css", rel: "stylesheet", href: fullScriptPath });
-         loadIncludes();
-      }
-      else {
-         appendTagToHead("script", { type: "text/javascript", src: fullScriptPath });
-      }
-   };
-
-   var appendTagToHead = function(tagName, attributes, body) {
-      var tag = document.createElement(tagName);
-      copyAttributes(tag, attributes);
-      if (body) {
-         if (null == tag.canHaveChildren || tag.canHaveChildren) {
-            tag.appendChild(document.createTextNode(body));
-         }
-         else {
-            if (tagName == "style") {
-               tag.styleSheet.cssText = body;
-            }
-            else {
-               tag.text = body;
-            }
-         }
-      }
-      if (tagName == "script") {
-         tag.onload = loadIncludes;
-         tag.onreadystatechange = function() {
-            if (this.readyState == 'complete' || this.readyState == 'loaded') {
-               tag.onreadystatechange = null;
-               loadIncludes();
-            }
-         }
-      }
-      var head = document.getElementsByTagName("head")[0];
-      head.appendChild(tag);
-   };
-
-   var copyAttributes = function(destination, source) {
-      for (var attribute in source) {
-         destination[attribute] = source[attribute];
-      }
-   };
-
-   var getFullScriptPath = function(script) {
-      return getPrefixForPath(script) + script + options.suffix;
-   };
-
-   var getPrefixForPath = function(path) {
-      for (var pattern in options.scriptLocations) {
-         if (path.match(new RegExp(pattern))) {
-            return options.scriptLocations[pattern];
-         }
-      }
-      return "";
    }
 
-   var getSpecialLoader = function(script) {
-      for (var pattern in options.loaders) {
-         if (script.match(new RegExp(pattern))) {
-            return options.loaders[pattern];
-         }
+   function runScript(script) {
+      script.apply(global);
+      loadIncludes();
+   }
+
+   function include(script) {
+      if (typeof script === "string") {
+         includeQueue.push(function() { includeScript(script); });
       }
-      return null;
+      else {
+         includeQueue.push(function() { runScript(script); });
+      }
+   }
+
+   function insertCachedStyle(name, styleText) {
+      styleText = styleText.replace(/url\s*\(\s*'\s*(?!http)/g, "url('" + getPrefixForPath(name));
+      appendTagToHead("style", { type: "text/css" }, styleText);
+      loadIncludes();
+   }
+
+   function getFunctionInnerSource(fn) {
+      var src = fn.toString();
+      var openBraceIdx = src.indexOf("{");
+      return src.substr(openBraceIdx + 1, src.length - (openBraceIdx + 2)) + "\n\n" + options.includeFunctionName + ".cacheCallback();\n";
+   }
+
+
+   function insertCachedScript(name, scriptWrappedInFunction) {
+      newIncludeContext();
+      appendTagToHead("script", { type: "text/javascript", name: name }, getFunctionInnerSource(scriptWrappedInFunction));
+      //      loadIncludes();
+   }
+
+   include.cache = function(key, action) {
+      cachedScripts[key] = function() {
+         includedScripts[key] = true;
+         if (isCss(key)) {
+            insertCachedStyle(key, action);
+         }
+         else {
+            insertCachedScript(key, action);
+         }
+      };
    };
 
+   include.cacheCallback = function() {
+      setTimeout(loadIncludes, 1);
+   };
+
+   Includer.configure = function(optionsToSet) {
+      copyAttributes(options, optionsToSet || {});
+      global[options.includeFunctionName] = include;
+   };
+
+   include.load = function() {
+      if (loading === false) {
+         loading = true;
+         loadIncludes();
+         return;
+      }
+   };
 })();
 
 
