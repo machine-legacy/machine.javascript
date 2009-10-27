@@ -145,7 +145,7 @@
    }
 
    function insertCachedStyle(name, styleText) {
-      styleText = styleText.replace(/url\s*\(\s*'\s*(?!http)/g, "url('" + getPrefixForPath(name));
+      styleText = styleText.replace(/url\s*\(\s*['"]?\s*(?!http)/g, "url('" + getFullScriptBasePath(name));
       appendTagToHead("style", { type: "text/css" }, styleText);
       loadIncludes();
    }
