@@ -43,17 +43,33 @@
       includeQueue = [];
    }
 
-   function getPrefixForPath(path) {
+   function getMatchingPrefixAndPath(path) {
+      var expression,
+          match;
       for (var pattern in options.scriptLocations) {
-         if (path.match(new RegExp(pattern))) {
-            return options.scriptLocations[pattern];
+         if (options.scriptLocations.hasOwnProperty(pattern)) {
+            expression = new RegExp(pattern);
+            match = path.match(expression);
+            if (match) {
+               if (match.length === 2) {
+                  path = match[1];
+               }
+               return { prefix: options.scriptLocations[pattern], path: path };
+            }
          }
       }
-      return "";
+      return { prefix: "", path: path };
    }
 
+
    function getFullScriptPath(script) {
-      return getPrefixForPath(script) + script + options.suffix;
+      var matches = getMatchingPrefixAndPath(script);
+      return matches.prefix + matches.path + options.suffix;
+   }
+
+   function getFullScriptBasePath(script) {
+      var fullPath = getFullScriptPath(script);
+      return fullPath.replace(/\/.*$/, "");
    }
 
    function getSpecialLoader(script) {
