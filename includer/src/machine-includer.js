@@ -69,7 +69,7 @@
 
    function getFullScriptBasePath(script) {
       var fullPath = getFullScriptPath(script);
-      return fullPath.replace(/\/.*$/, "");
+      return fullPath.replace(/\/[^\/]*$/, "/");
    }
 
    function getSpecialLoader(script) {
@@ -161,7 +161,7 @@
    }
 
    function insertCachedStyle(name, styleText) {
-      styleText = styleText.replace(/url\s*\(\s*['"]?\s*(?!http)/g, "url('" + getFullScriptBasePath(name));
+      styleText = styleText.replace(/url\s*\(\s*(['"]?)\s*(?!http)/g, "url($1" + getFullScriptBasePath(name));
       appendTagToHead("style", { type: "text/css" }, styleText);
       loadIncludes();
    }
