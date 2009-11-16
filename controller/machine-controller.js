@@ -11,6 +11,7 @@
           this.model = {};
           this.controllers = {};
           this.controllerRegistrations = [];
+          this.elementsToUnbind = [];
        },
        Action = this.Machine.Controller.Action = function(event, matcher, callback) {
           this.event = event;
