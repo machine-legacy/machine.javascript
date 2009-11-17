@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <title>machine.javascript example</title>
+    <script src="../lib/jquery/jquery-1.3.1.js"></script>
+    <script src="../includer/src/machine-includer.js"></script>
+  </head>
+  <body>
+    <script>
+      Machine.Includer.configure({scriptLocations : ''});
+      include('example-controller.js');
+      include.load();
+      
+      var ec = new ExampleController();
+    </script>
+    poop
+  </body>
+</html>
