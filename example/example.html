@@ -6,12 +6,14 @@
   </head>
   <body>
     <script>
+      var ec
       Machine.Includer.configure({scriptLocations : ''});
       include('example-controller.js');
+      include(function() {
+        ec = new ExampleController();
+      });
       include.load();
-      
-      var ec = new ExampleController();
     </script>
-    poop
+    hello world!
   </body>
 </html>
