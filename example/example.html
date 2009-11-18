@@ -3,17 +3,56 @@
     <title>machine.javascript example</title>
     <script src="../lib/jquery/jquery-1.3.1.js"></script>
     <script src="../includer/src/machine-includer.js"></script>
+    <style>
+      .header { background-color: #ffcc00; width: 100%; height 200px; padding: 10px 10px 10px 10px }
+    </style>
   </head>
   <body>
     <script>
-      var ec
-      Machine.Includer.configure({scriptLocations : ''});
-      include('example-controller.js');
-      include(function() {
-        ec = new ExampleController();
+      Machine.Includer.configure({scriptLocations : {'.*':''}});
+
+      $(function() {
+        include.load();
+        
+        $('.example_button').click(function(e) {
+          var textareaId = $(e.currentTarget).attr('textarea');
+          var taText = $('#'+textareaId).val();
+          eval(taText);
+          include.load();
+        });
       });
-      include.load();
+
     </script>
-    hello world!
+    <div class="header"><h1>machine-controller.js example</h1></div>
+    <div class="content">
+      <h3>Simple example</h3>
+      <p>
+        Here's an example of a simple controller that attaches to a container div and renders some static content:
+      </p>
+      <textarea rows="13" cols="80" id="simple_example">
+// controller definition
+include('../machine-controller.js');
+include(function() {
+  var global = this;
+  
+  // controller initializer
+  global.SimpleExampleController = function() {
+    this.content = "hello world from SimpleExampleController!";
+  };
+  global.SimpleExampleController.prototype = new Machine.Controller();
+});
+
+// instantiating the controller
+include(function() {
+  this.sec = new SimpleExampleController();
+});
+
+// attaching to the DOM
+include(function() {
+});
+      </textarea><br />
+      <input type="submit" value="Do it" class="example_button" textarea="simple_example" />
+      <div id="simple_example_container"></div>
+    </div>
   </body>
 </html>
