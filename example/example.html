@@ -31,13 +31,16 @@
       </p>
       <textarea rows="13" cols="80" id="simple_example">
 // controller definition
-include('../machine-controller.js');
+include('../controller/machine-controller.js');
+include('simple-view-renderer.js');
 include(function() {
   var global = this;
   
   // controller initializer
   global.SimpleExampleController = function() {
-    this.content = "hello world from SimpleExampleController!";
+    this.model.content = "hello world from SimpleExampleController!";
+    this.setView("", "Default"); // a minimalist view that renders
+                                 // whatever is in this.model.content
   };
   global.SimpleExampleController.prototype = new Machine.Controller();
 });
@@ -49,6 +52,11 @@ include(function() {
 
 // attaching to the DOM
 include(function() {
+  // update the controller's rendered markup
+  this.sec.render();
+  
+  // attach that markup to the document's DOM at some location
+  $('#simple_example_container').append(this.sec.domRoot);
 });
       </textarea><br />
       <input type="submit" value="Do it" class="example_button" textarea="simple_example" />
