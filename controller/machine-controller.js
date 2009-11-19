@@ -212,7 +212,8 @@
 
    Public.render = function() {
       if (this.view !== undefined) {
-         setDomRoot.call(this, this.doRender(this, this.model));
+         var viewStr = this.doRender(this, this.model);
+         setDomRoot.call(this, viewStr);
       }
       postRenderInternal.call(this);
    };
@@ -222,7 +223,7 @@
       this.view = view;
       renderer = newRenderer.call(this, renderer);
       this.doRender = function() {
-         renderer.render.apply(renderer, arguments);
+         return renderer.render.apply(renderer, arguments);
       };
    };
 
