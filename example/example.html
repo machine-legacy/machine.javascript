@@ -16,6 +16,9 @@
         
         $('.example_button').click(function(e) {
           var textareaId = $(e.currentTarget).attr('textarea');
+          var containerId = $(e.currentTarget).attr('container');
+          var containerDiv = $('#'+containerId);
+          containerDiv.empty();
           var taText = $('#'+textareaId).val();
           eval(taText);
           include.load();
@@ -32,13 +35,13 @@
       <textarea rows="13" cols="80" id="simple_example">
 // controller definition
 include('../controller/machine-controller.js');
-include('simple-view-renderer.js');
+include('default-view-renderer.js');
 include(function() {
   var global = this;
   
   // controller initializer
   global.SimpleExampleController = function() {
-    this.model.content = "hello world from SimpleExampleController!";
+    this.model.view = "<div>hello world from SimpleExampleController!</div>";
     this.setView("", "Default"); // a minimalist view that renders
                                  // whatever is in this.model.content
   };
@@ -47,19 +50,15 @@ include(function() {
 
 // instantiating the controller
 include(function() {
-  this.sec = new SimpleExampleController();
-});
-
-// attaching to the DOM
-include(function() {
+  var sec = new SimpleExampleController();
   // update the controller's rendered markup
-  this.sec.render();
+  sec.render();
   
   // attach that markup to the document's DOM at some location
-  $('#simple_example_container').append(this.sec.domRoot);
+  $('#simple_example_container').append(sec.domRoot);
 });
       </textarea><br />
-      <input type="submit" value="Do it" class="example_button" textarea="simple_example" />
+      <input type="submit" value="Do it" class="example_button" textarea="simple_example" container="simple_example_container"/>
       <div id="simple_example_container"></div>
     </div>
   </body>

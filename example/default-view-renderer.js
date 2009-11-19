@@ -3,7 +3,7 @@ include(function() {
   global.DefaultViewRenderer = function(view) {
   };
 
-  global.DefaultViewRenderer.render = function(controller, parameters) {
-    return parameters.content;
+  global.DefaultViewRenderer.prototype.render = function(controller, parameters) {
+    return parameters.view;
   };
 });
