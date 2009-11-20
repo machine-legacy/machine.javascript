@@ -226,7 +226,7 @@
    //Sets the view along with the renderer (short name or object) that will be used to render the view
    Public.setView = function(view, renderer) {
       this.view = view;
-      renderer = newRenderer.call(this, renderer);
+      renderer = newRenderer.call(this, view, renderer);
       this.doRender = function() {
          return renderer.render.apply(renderer, arguments);
       };
