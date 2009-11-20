@@ -45,8 +45,11 @@ include(function() {
   // controller initializer
   global.SimpleExampleController = function() {
     this.model.view = "<div>hello world from SimpleExampleController!</div>";
-    this.setView("", "Default"); // a minimalist view that renders
-                                 // whatever is in this.model.content
+    this.setView("", "Default"); // a minimalist renderer that renders
+                                 // whatever is in this.model.view
+                                 // .. more info on renderers and how they
+                                 // work is available in the View Renderers
+                                 // example
   };
   global.SimpleExampleController.prototype = new Machine.Controller();
 });
@@ -67,7 +70,56 @@ include(function() {
       </p>
       <h3>Controller actions</h3>
       <p>
-        
+        machine-javascript.js provides an abstraction around javascript eventing, referred to as <em>actions</em>. These provide a convenient, concise pattern to declare events that may occur as a result of user interaction with the document and the appropriate responses for them. One of the advantages of using machine-javascript.js actions instead of vanilla JavaScript or JQuery eventing mechanisms is that rebinding the action in the event of DOM changes is handled for you.
+      </p>
+      <p>
+        Below is an example of a controller that has a single action that waits for changes to a &lt;select&gt; dropdown and changes the text in a div as a result. The format for addAction()'s parameters are:
+        <ul>
+          <li><em>event</em> -- The JavaScript event to react to, in JQuery format (usually this means removing the "on" from the beginning of the event name, so "onClick" becomes "click", "onChange" becomes "change", etc)</li>
+          <li><em>selector</em> -- A CSS selector, as used in a JQuery $(selector) call.</li>
+          <li><em>handler</em> -- the handler function for the event passed as an argument
+        </ul>
+        Note that the handler function takes a single argument. This is, as in a JQuery event handler, the information about the event that was raised. In any action function, the "this" variable refers to the containing controller class itself, instead of the document. This means you have access to any model data or other variables that you want to store in the controller for the purposes of driving its logic.
+      </p>
+      <textarea rows="13" cols="80" id="actions_example">
+include('../controller/machine-controller.js');
+include('default-view-renderer.js');
+include(function() {
+  var global = this;
+  
+  var viewStrBegin = '<div>Input: <select id="action_example_select"><option value="-1"></option><option value="0">What did your first program say?</option><option value="1">How"re you doing, today?</option><option value="2">Talk like a pirate.</option></select><br />Value: <div id="action_example_value_div" style="display:inline">';
+  var viewStrEnd = '</div><p style="font-size:smaller;">Note: Because this example uses a very simplistic view renderer, the select box is going to reset its default/blank value every time it updates. If a real js view engine were used this issue could be mitigated.</p></div>';
+
+  global.ActionExampleController = function() {
+    this.currentValue = ""
+    this.model.view = viewStrBegin + this.currentValue + viewStrEnd;
+    this.values = ["Hello world!", "Oh, not too shabby. You?", "Yarrrrrr!"];
+    this.setView("", "Default");
+    this.addAction('change', "#action_example_select", this.onSelectChange);
+  };
+  global.ActionExampleController.prototype = new Machine.Controller();
+
+  // feel free to alias the controller's prototype for convenience
+  var Public = global.ActionExampleController.prototype
+
+  Public.onSelectChange = function(e) {
+    var number = $(e.currentTarget).val();
+    this.currentValue = this.values[number];
+    this.model.view = viewStrBegin + this.currentValue + viewStrEnd;
+    this.render();
+  };
+});
+
+include(function() {
+  var aec = new ActionExampleController();
+  aec.render();
+  
+  $('#actions_example_container').append(aec.domRoot);
+});
+      </textarea><br />
+      <input type="submit" value="Do it" class="example_button" textarea="actions_example" container="actions_example_container"/>
+      <p>
+        <div id="actions_example_container"></div>
       </p>
       <h3>machine-includer.js</h3>
       <p>
@@ -82,7 +134,7 @@ include(function() {
         </p>
       </p>
       <p>
-        And then at the top of the document's body tag, you'll want a script block like:
+        And then at the top of the document's body tag, you'll want a script block with something like:
         <p>
           <code>
 &lt;script type="javascript"&gt;<br />
