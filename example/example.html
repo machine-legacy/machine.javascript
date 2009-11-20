@@ -28,6 +28,9 @@
     </script>
     <div class="header"><h1>machine-controller.js example</h1></div>
     <div class="content">
+      <p>
+        machine-controller.js is a set of scripts that helps to lay out a pattern for sane, testable multi-file javascript development for web applications with rich client-side functionality.
+      </p>
       <h3>Simple example</h3>
       <p>
         Here's an example of a simple controller that attaches to a container div and renders some static content:
@@ -59,7 +62,54 @@ include(function() {
 });
       </textarea><br />
       <input type="submit" value="Do it" class="example_button" textarea="simple_example" container="simple_example_container"/>
-      <div id="simple_example_container"></div>
+      <p>
+        <div id="simple_example_container"></div>
+      </p>
+      <h3>Controller actions</h3>
+      <p>
+        
+      </p>
+      <h3>machine-includer.js</h3>
+      <p>
+        In additional to machine-controller.js, this package ships a script named machine-includer.js. This code in this file provides a robust includer mechanism that makes multi-file javascript development a breeze (giving you a more "C-style" includer system instead of the static, script-tags-in-the-header approach that browser-based JavaScript uses off-the-shelf).
+      </p>
+      <p>
+        It only requires a few lines of JavaScript in your HTML to enable it. Firstly, in your document's HEAD tag:</p>
+        <p>
+          <code>
+&lt;script type="javascript" src="/path/to/machine-includer.js"&gt;&lt;/script&gt;
+          </code>
+        </p>
+      </p>
+      <p>
+        And then at the top of the document's body tag, you'll want a script block like:
+        <p>
+          <code>
+&lt;script type="javascript"&gt;<br />
+// Initialize the includer and make it available for use.<br />
+Machine.Includer.configure();<br />
+<br />
+// The includer does not automatically load whatever script/code<br />
+// is present in an include() call when it encounters it. Instead,<br />
+// it puts the arguments to include() (whether its a path to a script<br />
+// or a function() {} block) inside of a queue.<br />
+// You must then explicitly make a call to include.load(), in order to<br />
+// kick off the cascading process that actually pulls in the scripts<br />
+// and evaluates the function blocks. The best time to do this is when<br />
+// the document has finished loading, so...<br />
+$(function() { include.load(); });<br />
+&lt;/script&gt;
+          </code>
+        </p>
+      </p>
+      <p>
+        And that's it. After that, you can have blocks that use the include() function to import scripts or some function block. A few rules of thumb:
+        <ul>
+          <li>If you have a function-block that you want to have included and it is going to depend on some script that is also imported via include(), put the include() call for the script before and <em>outside</em> of the include() call with the function block.</li>
+          <li>You can pass in values in a dictionary to the configure() function used to initialize the include to get special functionality like "mappings" for paths (e.g. so that include("cdn/script.js") would actually map to loading a script at http://some.cdn.com/script.js. The mechanism is quite flexible).</li>
+        </ul>
+      </p>
+
     </div>
   </body>
 </html>
