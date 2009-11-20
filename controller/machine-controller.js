@@ -212,8 +212,8 @@
 
    Public.render = function() {
       if (this.view !== undefined) {
-         var viewStr = this.doRender(this, this.model);
-         setDomRoot.call(this, viewStr);
+         var renderedString = this.doRender(this, this.model);
+         setDomRoot.call(this, renderedString);
       }
       postRenderInternal.call(this);
    };
