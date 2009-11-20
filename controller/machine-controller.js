@@ -33,7 +33,12 @@
                 break;
           }
        },
+       // 
+       renderers = { "default": function(view){ this.render=function(){return view;}}};
       Public = Controller.prototype;
+      Controller.registerViewRenderer = function(name, renderer){
+        renderers[name] = renderer;
+      };
 
    /*Private members*/
    function unbindDeepElements() {
@@ -106,10 +111,10 @@
 
    function newRenderer(view, renderer) {
       if (renderer === undefined) {
-         renderer = "Default";
+         renderer = "default";
       }
       if (typeof (renderer) === "string") {
-         var RendererClass = global[renderer + "ViewRenderer"];
+         var RendererClass = renderers[renderer.toLowerCase()];
          return new RendererClass(this.view);
       }
       return renderer;
