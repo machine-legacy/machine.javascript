@@ -92,6 +92,7 @@ include(function() {
 
   global.ActionExampleController = function() {
     this.currentValue = ""
+    this.registerViewRenderer("Default", global.DefaultViewRenderer);
     this.model.view = viewStrBegin + this.currentValue + viewStrEnd;
     this.values = ["Hello world!", "Oh, not too shabby. You?", "Yarrrrrr!"];
     this.setView("", "Default");
@@ -120,6 +121,17 @@ include(function() {
       <input type="submit" value="Do it" class="example_button" textarea="actions_example" container="actions_example_container"/>
       <p>
         <div id="actions_example_container"></div>
+      </p>
+      <h3>Making AJAX requests in actions</h3>
+      <p>
+        foo.
+      </p>
+      <textarea rows="13" cols="80" id="ajax_example">
+...      
+      </textarea><br />
+      <input type="submit" value="Do it" class="example_button" textarea="ajax_example" container="ajax_example_container"/>
+      <p>
+        <div id="ajax_example_container"></div>
       </p>
       <h3>machine-includer.js</h3>
       <p>
