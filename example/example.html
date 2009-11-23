@@ -38,18 +38,20 @@
       <textarea rows="13" cols="80" id="simple_example">
 // controller definition
 include('../controller/machine-controller.js');
-include('default-view-renderer.js');
 include(function() {
   var global = this;
-  
+
   // controller initializer
   global.SimpleExampleController = function() {
+    // here the "view renderer" for the controller is configured.
+    // in this case, no real view renderer is provided, so the
+    // controller will simply render the contents of whatever is
+    // passed to this.setView() whenever render() is called on it.
+    //
+    // The view renderer scheme is covered in-detail later in this
+    // document.
     this.model.view = "<div>hello world from SimpleExampleController!</div>";
-    this.setView("", "Default"); // a minimalist renderer that renders
-                                 // whatever is in this.model.view
-                                 // .. more info on renderers and how they
-                                 // work is available in the View Renderers
-                                 // example
+    this.setView(this.model.view);
   };
   global.SimpleExampleController.prototype = new Machine.Controller();
 });
@@ -83,19 +85,16 @@ include(function() {
       </p>
       <textarea rows="13" cols="80" id="actions_example">
 include('../controller/machine-controller.js');
-include('default-view-renderer.js');
 include(function() {
   var global = this;
-  
+
   var viewStrBegin = '<div>Input: <select id="action_example_select"><option value="-1"></option><option value="0">What did your first program say?</option><option value="1">How"re you doing, today?</option><option value="2">Talk like a pirate.</option></select><br />Value: <div id="action_example_value_div" style="display:inline">';
   var viewStrEnd = '</div><p style="font-size:smaller;">Note: Because this example uses a very simplistic view renderer, the select box is going to reset its default/blank value every time it updates. If a real js view engine were used this issue could be mitigated.</p></div>';
 
   global.ActionExampleController = function() {
     this.currentValue = ""
-    this.registerViewRenderer("Default", global.DefaultViewRenderer);
-    this.model.view = viewStrBegin + this.currentValue + viewStrEnd;
     this.values = ["Hello world!", "Oh, not too shabby. You?", "Yarrrrrr!"];
-    this.setView("", "Default");
+    this.setView(viewStrBegin + this.currentValue + viewStrEnd);
     this.addAction('change', "#action_example_select", this.onSelectChange);
   };
   global.ActionExampleController.prototype = new Machine.Controller();
@@ -107,6 +106,10 @@ include(function() {
     var number = $(e.currentTarget).val();
     this.currentValue = this.values[number];
     this.model.view = viewStrBegin + this.currentValue + viewStrEnd;
+    // we'll need to reset the view's content every time currentValue
+    // changes. this wouldn't be strictly necessary if a more 
+    // sophisticated view renderer solution were used.
+    this.setView(viewStrBegin + this.currentValue + viewStrEnd);
     this.render();
   };
 });
@@ -124,14 +127,24 @@ include(function() {
       </p>
       <h3>Making AJAX requests in actions</h3>
       <p>
-        foo.
+        A large part of what makes JavaScript useful for client-side web development is the AJAX model for asynchronous requests to the server. machine-controller.js, like any other JavaScript framework that would like to be relevant these days, offers no major obstacle to these kinds of activities. Below is an example of how one could implement doing AJAX requests as the result of some event on the client using JQuery's built-in AJAX mechanisms.
       </p>
       <textarea rows="13" cols="80" id="ajax_example">
-...      
+... AjaxExample ...
       </textarea><br />
       <input type="submit" value="Do it" class="example_button" textarea="ajax_example" container="ajax_example_container"/>
       <p>
         <div id="ajax_example_container"></div>
+      </p>
+      <h3>ViewRenderers and Views</h3>
+      <p>
+      </p>
+      <textarea rows="13" cols="80" id="view_renderer_example">
+... ViewRendererExample ...     
+      </textarea><br />
+      <input type="submit" value="Do it" class="example_button" textarea="view_renderer_example" container="view_renderer_example_container"/>
+      <p>
+        <div id="view_renderer_example_container"></div>
       </p>
       <h3>machine-includer.js</h3>
       <p>
@@ -140,16 +153,16 @@ include(function() {
       <p>
         It only requires a few lines of JavaScript in your HTML to enable it. Firstly, in your document's HEAD tag:</p>
         <p>
-          <code>
-&lt;script type="javascript" src="/path/to/machine-includer.js"&gt;&lt;/script&gt;
-          </code>
+          <blockquote>
+&lt;script type="text/javascript" src="/path/to/machine-includer.js"&gt;&lt;/script&gt;
+          </blockquote>
         </p>
       </p>
       <p>
         And then at the top of the document's body tag, you'll want a script block with something like:
         <p>
-          <code>
-&lt;script type="javascript"&gt;<br />
+          <blockquote>
+&lt;script type="text/javascript"&gt;<br />
 // Initialize the includer and make it available for use.<br />
 Machine.Includer.configure();<br />
 <br />
@@ -163,17 +176,12 @@ Machine.Includer.configure();<br />
 // the document has finished loading, so...<br />
 $(function() { include.load(); });<br />
 &lt;/script&gt;
-          </code>
+          </blockquote>
         </p>
       </p>
       <p>
-        And that's it. After that, you can have blocks that use the include() function to import scripts or some function block. A few rules of thumb:
-        <ul>
-          <li>If you have a function-block that you want to have included and it is going to depend on some script that is also imported via include(), put the include() call for the script before and <em>outside</em> of the include() call with the function block.</li>
-          <li>You can pass in values in a dictionary to the configure() function used to initialize the include to get special functionality like "mappings" for paths (e.g. so that include("cdn/script.js") would actually map to loading a script at http://some.cdn.com/script.js. The mechanism is quite flexible).</li>
-        </ul>
+        And that's it. After that, you can have blocks that use the include() function to import scripts or some function block. If you have a function-block that you want to have included and it is going to depend on some script that is also imported via include(), put the include() call for the script before and <em>outside</em> of the include() call with the function block.
       </p>
-
     </div>
   </body>
 </html>
