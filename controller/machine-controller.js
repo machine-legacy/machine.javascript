@@ -37,7 +37,7 @@
        renderers = { "default": function(view){ this.render=function(){return view;}}};
       Public = Controller.prototype;
       Controller.registerViewRenderer = function(name, renderer){
-        renderers[name] = renderer;
+        renderers[name.toLowerCase()] = renderer;
       };
 
    /*Private members*/
