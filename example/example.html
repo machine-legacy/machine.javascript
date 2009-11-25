@@ -138,9 +138,90 @@ include(function() {
       </p>
       <h3>ViewRenderers and Views</h3>
       <p>
+        Part of what makes the client-side "MVC" pattern so appealing is that it allows a developer to more deliberately organize the markup generated and managed by a controller. Previously, doing non-trivial client-side development where markup is generated would require, at best, extensive DOM manipulations via JQuery operations or JavaScript functions on the DOM itself.
+      </p>
+      <p>Instead, let us explore an alternative approach that brings many of benefits of similar abstractions on the server (separation of presentation from control logic chief amongst them).
+      </p>
+      <p>
+        machine-controller.js' rendering scheme (referred as the ViewRenderer from here on) is very flexible and meant to be worked out and implemented by the developer as-needed. It simply requires the definition of a prototype with an implementation for a render() function, in a similar fashion to specifying controllers. The prototype is then globally registered and is available to any controllers in the document that wish to use it. A developer may find that ViewRenderers are suitable for a number of tasks (like fetching static content via AJAX) in addition to updating DOM markup.
+      </p>
+      <p>
+        Below is an example implementation of a ViewRenderer that uses the <a href="http://www.embeddedjs.com">EJS</a> javascript templating engine. Its templates define markup that looks much like HTML with opportunities to escape into JavaScript for control logic, conditionals, looping, etc.
       </p>
       <textarea rows="13" cols="80" id="view_renderer_example">
-... ViewRendererExample ...     
+include("ejs.js");
+include("../controller/machine-controller.js");
+include(function() {
+  var global = this;
+  
+  // our EJS renderer implementation
+  global.EjsViewRenderer = function(view) {
+    var elem = $(view);
+    // if we are passed template markup as a string, make sure it
+    // has a single root container element (otherwise it
+    // will fail at render-time). Otherwise, treat the
+    // string as a path to an .ejs script.
+    if (typeof(view) == "string") {
+      if (elem.length == 1) {
+        this.compiledTemplate = new EJS({text: view});
+      }
+      else if (elem.length > 1) {
+        throw "a valid ejs template must have a single root container node";
+      }
+      else {
+        this.compiledTemplate = new EJS({url: view});
+      }
+    }
+    else {
+      throw "EjsViewRender only accept a string (template markup or a path to an ejs script) as its 'view' arugment";
+    }
+  };
+
+  global.EjsViewRenderer.prototype.render = function(controller, model) {
+    // this function returns a string representing the rendered
+    // view that will be attached to the DOM
+    return this.compiledTemplate.render(model);
+  };
+
+  // register the ViewRenderer with our global renderer container
+  Machine.Controller.registerViewRenderer("ejs", global.EjsViewRenderer);
+
+});
+
+include(function() {
+  var global = this;
+
+  // a basic EJS template -- note that there is an enclosing, single
+  // "container" element
+  var template = '<div><input type="text" id="view_example_name" value="<%= name %>"/><input type="button" id="view_example_button" value="Introduce yourself"/><div>Hello, <%= name %>!</div></div>';
+
+
+  // a simple controller that uses the EjsViewRenderer
+  global.ViewRendererExampleController = function() {
+    this.setView(template, "ejs"); // here, "ejs" matches the name provided to
+                                   // Machine.Controller.registerViewRenderer()
+    this.model.name = 'Alan Turing' // this is the same model that gets passed
+                                    // into EjsViewRenderer.render()
+    this.addAction('click', '#view_example_button', this.onButtonClick);
+  };
+
+  global.ViewRendererExampleController.prototype = new Machine.Controller();
+
+  var Public = global.ViewRendererExampleController.prototype
+
+  Public.onButtonClick = function() {
+    var newName = $('#view_example_name').val();
+    this.model.name = newName;
+    this.render(); // call the controller's render() function when you want
+                   // to update the controller's view markup
+  }
+});
+
+include(function() {
+  var vrec = new ViewRendererExampleController();
+  vrec.render();
+  $('#view_renderer_example_container').append(vrec.domRoot);
+});
       </textarea><br />
       <input type="submit" value="Do it" class="example_button" textarea="view_renderer_example" container="view_renderer_example_container"/>
       <p>
@@ -148,7 +229,7 @@ include(function() {
       </p>
       <h3>machine-includer.js</h3>
       <p>
-        In additional to machine-controller.js, this package ships a script named machine-includer.js. This code in this file provides a robust includer mechanism that makes multi-file javascript development a breeze (giving you a more "C-style" includer system instead of the static, script-tags-in-the-header approach that browser-based JavaScript uses off-the-shelf).
+        In additional to machine-controller.js, this package ships a script named machine-includer.js. The code in this file provides a robust includer mechanism that makes multi-file javascript development a breeze (giving you a more "C-style" includer system instead of the static, script-tags-in-the-header approach that browser-based JavaScript uses off-the-shelf).
       </p>
       <p>
         It only requires a few lines of JavaScript in your HTML to enable it. Firstly, in your document's HEAD tag:</p>
