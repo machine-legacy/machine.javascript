@@ -5,13 +5,6 @@
    var global = this,
        NonBubblingEvents = ["change", "focus", "blur"],
        Controller = this.Machine.Controller = function() {
-          this.actions = [];
-          this.renderFinished = function() { };
-          this.controllerNameAttribute = 'controller';
-          this.model = {};
-          this.controllers = {};
-          this.controllerRegistrations = [];
-          this.elementsToUnbind = [];
        },
        Action = this.Machine.Controller.Action = function(event, matcher, callback) {
           this.event = event;
@@ -180,6 +173,15 @@
 
 
    /* Public Members */
+   Public.init = function(){
+      this.actions = [];
+      this.renderFinished = function() { };
+      this.controllerNameAttribute = 'controller';
+      this.model = {};
+      this.controllers = {};
+      this.controllerRegistrations = [];
+      this.elementsToUnbind = [];
+   };
 
    Public.addAction = function(eventName, matcher, callback) {
       this.actions.push(new Action(eventName, matcher ? matcher : '*', callback));
