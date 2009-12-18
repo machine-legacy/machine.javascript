@@ -50,6 +50,7 @@ include(function() {
     //
     // The view renderer scheme is covered in-detail later in this
     // document.
+    this.init();
     this.model.view = "<div>hello world from SimpleExampleController!</div>";
     this.setView(this.model.view);
   };
@@ -92,6 +93,7 @@ include(function() {
   var viewStrEnd = '</div><p style="font-size:smaller;">Note: Because this example uses a very simplistic view renderer, the select box is going to reset its default/blank value every time it updates. If a real js view engine were used this issue could be mitigated.</p></div>';
 
   global.ActionExampleController = function() {
+    this.init();
     this.currentValue = ""
     this.values = ["Hello world!", "Oh, not too shabby. You?", "Yarrrrrr!"];
     this.setView(viewStrBegin + this.currentValue + viewStrEnd);
