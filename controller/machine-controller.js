@@ -62,14 +62,14 @@
           eventElement = event.target,
           selectorTopElements,
           eventArguments = arguments;
-
+      var self = this;
 
       function doCallBack() {
          action.callback.apply(this, eventArguments);
       }
 
       if (action.matcher === "*") {
-         doCallBack.call(this);
+         doCallBack.call(self);
          return;
       }
 
@@ -77,14 +77,14 @@
 
       if ($.inArray(eventElement, selectorTopElements) >= 0) {
          event.actionTarget = event.target;
-         doCallBack.call(this);
+         doCallBack.call(self);
          return;
       }
       else {
          $.each(selectorTopElements, function(i, descendantElement) {
             if ($.inArray(eventElement, $(descendantElement).find("*")) >= 0) {
                event.actionTarget = descendantElement;
-               doCallBack.call(this);
+               doCallBack.call(self);
                return false;
             }
             return true;
@@ -163,7 +163,7 @@
       this.reBindActions();
       attachSubControllers.call(this);
       this.isRendered = true;
-      this.renderFinished();
+      this.renderFinished.call(this);
    }
 
    function getOnEventCallBack() {
