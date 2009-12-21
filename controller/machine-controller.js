@@ -248,6 +248,7 @@
    };
 
    Public.attachToExistingDom = function(domNode, triggerPostRenderCallbacks) {
+      this.domRoot = null;
       setDomRoot.call(this, domNode);
       if (triggerPostRenderCallbacks) {
          postRenderInternal.call(this);
