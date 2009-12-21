@@ -145,10 +145,11 @@
    function attachSubControllers() {
       var self = this;
       $.each(this.controllerRegistrations, function(index, registration) {
-         this.domRoot.find(registration.selector).each(function(index) {
-            var attachPoint = this,
-                controller = registration.getController.call(self, attachPoint, index);
-            if ($(attachPoint).chidlren().length > 0) {
+         self.domRoot.find(registration.selector).each(function(index) {
+            var attachPoint = $(this),
+                parentController = self,
+                controller = registration.getController(parentController, attachPoint, index);
+            if (attachPoint.children().length > 0) {
                controller.attachToExistingDom(attachPoint, true);
             }
             else {
