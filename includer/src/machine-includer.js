@@ -7,12 +7,13 @@
        includedScripts = {},
        cachedScripts = {},
        loading = false,
-       options = {
-          scriptLocations: { ".*": "/" },
-          suffix: "",
-          includeFunctionName: "include",
-          loaders: {}
-       };
+       externalIncludedScripts = null;
+   options = {
+      scriptLocations: { ".*": "/" },
+      suffix: "",
+      includeFunctionName: "include",
+      loaders: {}
+   };
 
 
    function copyAttributes(destination, source) {
@@ -23,7 +24,23 @@
       }
    }
 
+   function initializeExternalIncludedScripts() {
+      if (externalIncludedScripts === null) {
+         var scriptTags,
+             serverRegEx;
+
+         serverRegEx = new RegExp('^http://.*?/');
+         scriptTags = document.getElementsByTagName("script");
+         externalIncludedScripts = {};
+         for (var i = 0; i < scriptTags.length; i++) {
+            var scriptTag = scriptTags[i];
+            externalIncludedScripts[scriptTag.src.replace(serverRegEx, "")] = true;
+         }
+      }
+   }
+
    function loadIncludes() {
+      initializeExternalIncludedScripts();
       if (includeQueue.length === 0) {
          if (includeContextStack.length === 0) {
             loading = false;
@@ -131,12 +148,13 @@
    }
 
    function includeScript(script) {
-      if (includedScripts[script]) {
+      if (includedScripts[script.toLowerCase()] || externalIncludedScripts[getFullScriptPath(script).toLowerCase()]) {
          loadIncludes();
          return;
       }
-      includedScripts[script] = true;
-      if (cachedScripts[script]) {
+
+      includedScripts[script.toLowerCase()] = true;
+      if (cachedScripts[script.toLowerCase()]) {
          //console.log("Loading " + script + " from cache");
          cachedScripts[script]();
       }
