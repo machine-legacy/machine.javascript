@@ -28,9 +28,15 @@ namespace Machine.Javascript.Bundler
         "Use transient dependencies to include files included by bundled files in other folders")] 
     public bool TransientDependencies;
 
+    [Option("e", "excludefile",
+      HelpText =
+        "Use given file as a source of regular expressions. Matches will not be bundled (default .bundleexclude)"
+      )] public string ExcludeFile = ".bundleignore";
+
     [Option("b", "base",
       HelpText = "Base path used to calculate relative path of script used during production")] 
     public string _basePath;
+
 
     public string BasePath
     {

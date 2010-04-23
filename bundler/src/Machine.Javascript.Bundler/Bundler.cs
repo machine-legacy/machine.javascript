@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Machine.Javascript.Bundler
 {
@@ -12,6 +13,7 @@ namespace Machine.Javascript.Bundler
     readonly bool _includeSubFolders;
     readonly bool _transientDependencies;
     readonly List<BundledScript> _bundledScripts = new List<BundledScript>();
+    List<Regex> _exclusions = new List<Regex>();
 
     public Bundler(ScriptLocation location, Options options)
     {
@@ -19,6 +21,37 @@ namespace Machine.Javascript.Bundler
       _rootOnly = options.RootOnly;
       _includeSubFolders = options.IncludeSubFolders;
       _transientDependencies = options.TransientDependencies;
+      if(File.Exists(options.ExcludeFile))
+      {
+        ConfigureExclusions(options.ExcludeFile);
+      }
+    }
+
+    void ConfigureExclusions(string excludeFile)
+    {
+      int lineNumber = 0;
+      string line = "";
+      try
+      {
+        using (var reader = new StreamReader(excludeFile))
+        {
+          while (!reader.EndOfStream)
+          {
+            lineNumber++;
+            line = reader.ReadLine();
+            line = line.Trim();
+            if (!string.IsNullOrEmpty(line))
+            {
+              _exclusions.Add(new Regex(line, RegexOptions.IgnoreCase));
+            }
+          }
+        }
+      }
+      catch(Exception ex)
+      {
+        Console.WriteLine(string.Format("Error While processing exclusion file {0} line {1}. Expression: {2}. Exception: {3}", excludeFile, lineNumber, line, ex));
+        Environment.Exit(-1);
+      }
     }
 
     public void CreateBundles()
@@ -88,7 +121,7 @@ namespace Machine.Javascript.Bundler
     {
       foreach (var script in bundledScripts)
       {
-        if(!_bundledScripts.Contains(script))
+        if(!_bundledScripts.Contains(script) && !IsExcluded(script))
         {
           _bundledScripts.Add(script);
           script.WriteTo(outputStream);
@@ -96,6 +129,10 @@ namespace Machine.Javascript.Bundler
       }
     }
 
+    bool IsExcluded(BundledScript script)
+    {
+      return _exclusions.Any(exclusion => exclusion.Match(script.Script).Success);
+    }
   }
 
 }

@@ -26,6 +26,11 @@ namespace Machine.Javascript.Bundler
       _isCss = _script.MatchesExtension(".css");
     }
 
+    public string Script
+    {
+      get { return _script; }
+    }
+
     public IEnumerable<BundledScript> TransientScripts
     {
       get
