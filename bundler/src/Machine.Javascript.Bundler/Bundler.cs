@@ -13,7 +13,7 @@ namespace Machine.Javascript.Bundler
     readonly bool _includeSubFolders;
     readonly bool _transientDependencies;
     readonly List<BundledScript> _bundledScripts = new List<BundledScript>();
-    List<Regex> _exclusions = new List<Regex>();
+    readonly List<Regex> _exclusions = new List<Regex>();
 
     public Bundler(ScriptLocation location, Options options)
     {
@@ -114,8 +114,8 @@ namespace Machine.Javascript.Bundler
       {
         WriteBundle(outputStream, bundledScriptLines);
       }
-
     }
+
 
     void WriteBundle(TextWriter outputStream, IEnumerable<BundledScript> bundledScripts)
     {
@@ -126,6 +126,10 @@ namespace Machine.Javascript.Bundler
           _bundledScripts.Add(script);
           script.WriteTo(outputStream);
         }
+      }
+      if(!_rootOnly)
+      {
+        _bundledScripts.Clear();
       }
     }
 
