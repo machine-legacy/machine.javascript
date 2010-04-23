@@ -7,16 +7,21 @@ namespace Machine.Javascript.Bundler
 {
   public class Bundler
   {
+    readonly ScriptLocation _location;
     readonly bool _rootOnly;
     readonly bool _includeSubFolders;
+    readonly bool _transientDependencies;
+    readonly List<BundledScript> _bundledScripts = new List<BundledScript>();
 
-    public Bundler(Options options)
+    public Bundler(ScriptLocation location, Options options)
     {
+      _location = location;
       _rootOnly = options.RootOnly;
       _includeSubFolders = options.IncludeSubFolders;
+      _transientDependencies = options.TransientDependencies;
     }
 
-    public void CreateBundles(ScriptLocation location)
+    public void CreateBundles()
     {
       Console.WriteLine("Creating Javascript Bundles.....");
       try
@@ -24,15 +29,15 @@ namespace Machine.Javascript.Bundler
 
         if (_rootOnly)
         {
-          using (var outputStream = new StreamWriter(location.BundleFilePath))
+          using (var outputStream = new StreamWriter(_location.BundleFilePath))
           {
-            Console.WriteLine( string.Format("Creating single bundle at {0}", location.BundleFilePath));
-            CreateBundles(location, outputStream);
+            Console.WriteLine( string.Format("Creating single bundle at {0}", _location.BundleFilePath));
+            CreateBundles(_location, outputStream);
           }
         }
         else
         {
-          CreateBundles(location, null);
+          CreateBundles(_location, null);
         }
       }
       catch(Exception ex)
@@ -43,25 +48,32 @@ namespace Machine.Javascript.Bundler
     }
 
     void CreateBundles(ScriptLocation location, TextWriter outputStream)
-    {
+   {
       foreach (var subLocation in location.SubLocations)
       {
         CreateBundles(subLocation, outputStream);
       }
 
-      var bundledScriptLines = location.BundledScriptLines;
+      var bundledScriptLines = location.BundledScripts;
 
       if (outputStream == null)
       {
-        if (_includeSubFolders)
+
+        if(_transientDependencies)
         {
-          bundledScriptLines = bundledScriptLines.Concat(location.LinesFromSubFolderBundles);
+          bundledScriptLines = bundledScriptLines.Concat(location.TransientDependencyScripts); 
         }
 
         using (var bundleStream = new StreamWriter(location.BundleFilePath))
         {
           Console.WriteLine("\n======= Processing files to include in {0}", location.BundleFilePath);
           WriteBundle(bundleStream, bundledScriptLines);
+
+          if(_includeSubFolders)
+          {
+            location.WriteSubFolderBundles(bundleStream);
+          }
+
           Console.WriteLine(string.Format("Writing {0}", location.BundleFilePath));
         }
       }
@@ -72,13 +84,18 @@ namespace Machine.Javascript.Bundler
 
     }
 
-    static void WriteBundle(TextWriter outputStream, IEnumerable<string> scriptLines)
+    void WriteBundle(TextWriter outputStream, IEnumerable<BundledScript> bundledScripts)
     {
-      foreach (var line in scriptLines)
+      foreach (var script in bundledScripts)
       {
-        outputStream.WriteLine(line);
+        if(!_bundledScripts.Contains(script))
+        {
+          _bundledScripts.Add(script);
+          script.WriteTo(outputStream);
+        }
       }
     }
 
   }
+
 }

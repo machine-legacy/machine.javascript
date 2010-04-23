@@ -28,48 +28,47 @@ namespace Machine.Javascript.Bundler
       }
     }
 
-    public IEnumerable<string> BundledScriptLines
+    public IEnumerable<BundledScript> BundledScripts
     {
       get
       {
         var scripts = Directory.GetFiles(_path).Where( path => !path.Equals(_bundleFilePath,StringComparison.InvariantCultureIgnoreCase) && (path.MatchesExtension(".css") || path.MatchesExtension(".js")));
-        foreach(var script in scripts)
-        {
-          var scriptReader = new ScriptBundleFormater(script, script.JsPathRelativeTo(_basePath)); 
-          foreach(var line in scriptReader.Lines)
-          {
-            yield return line; 
-          }
-        }
+        return scripts.Select(script => new BundledScript(script, _basePath));
       }
     }
 
-    public IEnumerable<string> LinesFromSubFolderBundles
+    public void WriteSubFolderBundles(TextWriter writer)
     {
-      get
-      {
         foreach (var location in SubLocations)
         {
           if (File.Exists(location.BundleFilePath))
           {
             Console.WriteLine(string.Format("Also including content from {0}", location._bundleFilePath));
+
             using(var reader = new StreamReader(location.BundleFilePath))
             {
               while(!reader.EndOfStream)
               {
-                yield return reader.ReadLine();
+                writer.WriteLine(reader.ReadLine());
               }
             }
           }
         }
-
-      }
     }
+
     public string BundleFilePath
     {
       get
       {
         return _bundleFilePath;
+      }
+    }
+
+    public IEnumerable<BundledScript> TransientDependencyScripts
+    {
+      get
+      {
+        return BundledScripts.SelectMany(script => script.TransientScripts);
       }
     }
 

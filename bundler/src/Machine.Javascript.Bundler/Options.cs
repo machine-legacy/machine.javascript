@@ -23,6 +23,11 @@ namespace Machine.Javascript.Bundler
           HelpText = "For each folder that is bundled include all scripts recursively from subfolders in the bundle")]
     public bool IncludeSubFolders;
 
+    [Option("t", "transient",
+      HelpText =
+        "Use transient dependencies to include files included by bundled files in other folders")] 
+    public bool TransientDependencies;
+
     [Option("b", "base",
       HelpText = "Base path used to calculate relative path of script used during production")] 
     public string _basePath;

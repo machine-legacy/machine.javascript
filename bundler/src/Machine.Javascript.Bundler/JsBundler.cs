@@ -18,11 +18,11 @@ namespace Machine.Javascript.Bundler
       }
 
       var scriptLocations = options.PathsToBundle.Select(path => new ScriptLocation(path, options.BasePath, options.BundleName));
-      var bundler = new Bundler(options);
 
       foreach (var location in scriptLocations)
       {
-        bundler.CreateBundles(location);
+        var bundler = new Bundler(location, options);
+        bundler.CreateBundles();
       }
     }
   }
